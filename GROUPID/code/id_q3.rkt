@@ -45,3 +45,40 @@
            (loop (cadr (car stack))
                  (cdr stack)
                  (cons (car (car stack)) acc))))))
+
+;; (preorder tree) -> list of values (node, left subtree, right subtree)
+;; Recursive reading: keep a stack of subtrees still to visit, starting with
+;;   the whole tree.
+;;   - stack empty: done; acc holds the values in reverse preorder, so
+;;     reverse it once.
+;;   - top is '(): drop it.
+;;   - top is a node: record its value, then push right and left so that
+;;     left ends up on top and is visited next (node, left, right).
+;; Tail recursive: yes (every call to loop is in tail position).
+(define (preorder tree)
+  (let loop ((stack (list tree)) (acc '()))
+    (cond ((null? stack)
+           (my-reverse acc))
+          ((null? (car stack))
+           (loop (cdr stack) acc))
+          (else
+           (let ((node (car stack)))
+             (loop (cons (cadr node) (cons (caddr node) (cdr stack)))
+                   (cons (car node) acc)))))))
+
+;; (postorder tree) -> list of values (left subtree, right subtree, node)
+;; Recursive reading: same stack walk, but push left first and right on top,
+;;   so subtrees are visited in the order node, right, left. That order is
+;;   exactly postorder backwards, and consing each value onto acc reverses
+;;   it again, so acc is already in postorder: no final reverse needed.
+;; Tail recursive: yes (every call to loop is in tail position).
+(define (postorder tree)
+  (let loop ((stack (list tree)) (acc '()))
+    (cond ((null? stack)
+           acc)
+          ((null? (car stack))
+           (loop (cdr stack) acc))
+          (else
+           (let ((node (car stack)))
+             (loop (cons (caddr node) (cons (cadr node) (cdr stack)))
+                   (cons (car node) acc)))))))
