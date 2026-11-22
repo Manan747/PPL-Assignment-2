@@ -96,3 +96,31 @@ clue(8, Solution) :-
     memberchk(p(_, Dept, Lang, data), Solution),
     Dept == research,
     Lang \== javascript.
+
+%% satisfies(+Active, +Solution)
+%  Declarative reading: Solution makes true every clue whose number is in
+%  the list Active.
+%  Modes / determinism: semidet.
+satisfies(Active, Solution) :-
+    forall(member(N, Active), clue(N, Solution)).
+
+%% solve(-Solution)
+%  Declarative reading: Solution is a candidate that satisfies clues 1 to 8.
+%  Modes / determinism: nondet (the puzzle as given has several solutions).
+solve(Solution) :-
+    candidate(Solution),
+    satisfies([1, 2, 3, 4, 5, 6, 7, 8], Solution).
+
+%% print_friend(+Friend)
+%  Prints one friend as  Name = [Dept, Lang, Project]  followed by a newline.
+%  ~w writes atoms without quotes, so 'c++' prints as c++ and 'AI' as AI.
+print_friend(p(Name, Dept, Lang, Project)) :-
+    format("~w = [~w, ~w, ~w]~n", [Name, Dept, Lang, Project]).
+
+%% main
+%  Finds one solution of clues 1 to 8 (the first one found) and prints it
+%  as four lines in the order Alex, Ben, Carla, Dana. The answer is derived
+%  from the clues, not hard-coded. once/1 stops after the first solution.
+main :-
+    once(solve(Solution)),
+    forall(member(Friend, Solution), print_friend(Friend)).
