@@ -8,10 +8,10 @@
 ;;   element of lst onto acc and reverse the rest.
 ;; Tail recursive: yes (named let, acc carries the partial result).
 (define (my-reverse lst)
-  (let loop ((rest lst) (acc '()))
-    (if (null? rest)
+  (let loop ((remaining lst) (acc '()))
+    (if (null? remaining)
         acc
-        (loop (cdr rest) (cons (car rest) acc)))))
+        (loop (cdr remaining) (cons (car remaining) acc)))))
 
 ;; (my-append a b) -> list
 ;; Recursive reading: appending '() to b gives b; otherwise it is the first
@@ -82,3 +82,69 @@
            (let ((node (car stack)))
              (loop (cons (caddr node) (cons (cadr node) (cdr stack)))
                    (cons (car node) acc)))))))
+
+;; (height tree) -> number
+;; Recursive reading: the height of '() is 0; the height of a node is 1 plus
+;;   the larger of its subtrees' heights. Computed as the deepest level seen:
+;;   the stack holds pairs (subtree . its-depth), and best is the largest
+;;   depth of any real node visited so far.
+;;   - stack empty: return best.
+;;   - top subtree is '(): drop it.
+;;   - top subtree is a node at depth d: best becomes (max best d), and
+;;     both children are pushed at depth d + 1.
+;; Tail recursive: yes (every call to loop is in tail position).
+(define (height tree)
+  (let loop ((stack (list (cons tree 1))) (best 0))
+    (cond ((null? stack)
+           best)
+          ((null? (car (car stack)))
+           (loop (cdr stack) best))
+          (else
+           (let ((node (car (car stack)))
+                 (depth (cdr (car stack))))
+             (loop (cons (cons (cadr node) (+ depth 1))
+                         (cons (cons (caddr node) (+ depth 1))
+                               (cdr stack)))
+                   (max best depth)))))))
+
+;; (leaf-count tree) -> number
+;; Recursive reading: '() has 0 leaves; a node whose children are both '()
+;;   is one leaf; any other node has as many leaves as its two subtrees
+;;   together. Computed with a stack of subtrees and a running count.
+;;   - stack empty: return count.
+;;   - top is '(): drop it.
+;;   - top is a leaf: count + 1.
+;;   - top is an inner node: push both children.
+;; Tail recursive: yes (every call to loop is in tail position).
+(define (leaf-count tree)
+  (let loop ((stack (list tree)) (count 0))
+    (cond ((null? stack)
+           count)
+          ((null? (car stack))
+           (loop (cdr stack) count))
+          ((and (null? (cadr (car stack))) (null? (caddr (car stack))))
+           (loop (cdr stack) (+ count 1)))
+          (else
+           (let ((node (car stack)))
+             (loop (cons (cadr node) (cons (caddr node) (cdr stack)))
+                   count))))))
+
+;; (print-inorder tree) -> prints the inorder list on one line.
+(define (print-inorder tree)
+  (display (inorder tree))
+  (newline))
+
+;; (print-all-traversals tree) -> prints inorder, preorder and postorder
+;;   lists, one per line.
+(define (print-all-traversals tree)
+  (display (inorder tree))
+  (newline)
+  (display (preorder tree))
+  (newline)
+  (display (postorder tree))
+  (newline))
+
+;; (print-height-and-leaves tree) -> prints the list (height leaf-count).
+(define (print-height-and-leaves tree)
+  (display (list (height tree) (leaf-count tree)))
+  (newline))
