@@ -97,6 +97,15 @@ clue(8, Solution) :-
     Dept == research,
     Lang \== javascript.
 
+% Clue 9 is our repair (P1.c). Clues 1-8 leave three solutions, and two of
+% them use the same (department, language, project) combinations, only with
+% different names, so a clue without names can keep only the third one.
+% It is true there and false in the other two.
+% CLUE 9: The friend who works in the testing department prefers the AI project.
+clue(9, Solution) :-
+    memberchk(p(_, testing, _, Project), Solution),
+    Project == 'AI'.
+
 %% satisfies(+Active, +Solution)
 %  Declarative reading: Solution makes true every clue whose number is in
 %  the list Active.
