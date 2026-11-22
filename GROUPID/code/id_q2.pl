@@ -87,3 +87,46 @@ operand_string(Side, Tree, ParentPrec, String) :-
 %  parent of precedence ParentPrec must be written in parentheses.
 needs_parens(left,  Child, Parent) :- Child <  Parent.
 needs_parens(right, Child, Parent) :- Child =< Parent.
+
+%% equation(+List, -Equation)
+%  Declarative reading: Equation is the canonical string "L=R" of a valid
+%  equation for List: List is split into a non-empty left part and a
+%  non-empty right part, each part is an expression over its numbers (in
+%  order, each used once), and both expressions have the same integer value.
+%  Modes / determinism: nondet; one answer per valid (left tree, right tree)
+%  pair. Fails (finitely) when List has fewer than two numbers, because no
+%  split into two non-empty parts exists.
+equation(List, Equation) :-
+    is_list(List),
+    split(List, LeftNums, RightNums),
+    expr(LeftNums, LeftTree, Value),
+    expr(RightNums, RightTree, RightValue),
+    Value =:= RightValue,
+    tree_string(LeftTree, LeftString),
+    tree_string(RightTree, RightString),
+    format(string(Equation), "~w=~w", [LeftString, RightString]).
+
+%% generate_equation(+List, -Equation)
+%  Declarative reading: Equation is one valid equation for List (a string
+%  such as "4*2=5+3").
+%  Modes / determinism: semidet. once/1 keeps the first equation found; the
+%  goal fails, without looping or raising an error, when there is none
+%  (including for [] and one-element lists).
+generate_equation(List, Equation) :-
+    once(equation(List, Equation)).
+
+%% all_equations(+List, -Equations)
+%  Declarative reading: Equations is the list of all valid equations for
+%  List, without duplicates, in standard order of terms.
+%  Modes / determinism: det. findall/3 gives [] when there are none, and
+%  sort/2 both orders the strings and removes duplicates.
+all_equations(List, Equations) :-
+    findall(Equation, equation(List, Equation), All),
+    sort(All, Equations).
+
+%% count_equations(+List, -N)
+%  Declarative reading: N is the number of valid equations for List.
+%  Modes / determinism: det.
+count_equations(List, N) :-
+    all_equations(List, Equations),
+    length(Equations, N).
