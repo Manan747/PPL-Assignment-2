@@ -33,3 +33,33 @@
     (if (null? remaining)
         (my-reverse acc)
         (loop (cdr remaining) (cons (f (car remaining)) acc)))))
+
+;; (is-list? v) -> #t if v is a list ('() or a pair), #f if v is an atom.
+;; (list? is not an allowed built-in; the input never has dotted pairs.)
+(define (is-list? v)
+  (or (null? v) (pair? v)))
+
+;; (make-inserter x len-ok?) -> a function from a list to a list
+;; Recursive reading of the returned function on lst:
+;;   first transform every element (sublists recursively, atoms unchanged);
+;;   then, if the ORIGINAL length of lst satisfies len-ok?, put x in front.
+;; The length is taken from lst itself, before anything is inserted.
+;; Walking across a list's elements is done by the tail-recursive my-map,
+;; so 10,000-element lists are fine; recursion only goes as deep as the
+;; nesting (100 in the hidden tests).
+(define (make-inserter x len-ok?)
+  (letrec ((insert
+            (lambda (lst)
+              (let ((len (my-length lst))
+                    (inner (my-map (lambda (e) (if (is-list? e) (insert e) e))
+                                   lst)))
+                (if (len-ok? len)
+                    (cons x inner)
+                    inner)))))
+    insert))
+
+;; (insert-if-short x lst n) -> lst with x inserted at the front of every
+;;   list (at every level, the top level and '() included) whose original
+;;   length is less than n.
+(define (insert-if-short x lst n)
+  ((make-inserter x (lambda (len) (< len n))) lst))
