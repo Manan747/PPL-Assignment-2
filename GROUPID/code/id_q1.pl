@@ -37,3 +37,62 @@ candidate(Solution) :-
     permutation(Depts,    [D1, D2, D3, D4]),
     permutation(Langs,    [L1, L2, L3, L4]),
     permutation(Projects, [P1, P2, P3, P4]).
+
+%% clue(+N, +Solution)
+%  Declarative reading: clue(N, Solution) holds when clue number N of the
+%  puzzle is true in the fully filled-in Solution.
+%  Modes / determinism: semidet for a ground Solution. Each clue is only a
+%  test: it never generates values. Because every value of an attribute
+%  belongs to exactly one friend, memberchk/2 finds "the friend with value
+%  X" deterministically. \== is safe here because Solution is ground.
+
+% CLUE 1: The friend who prefers the AI project does not work in research
+% and is not Dana.
+clue(1, Solution) :-
+    memberchk(p(Name, Dept, _, 'AI'), Solution),
+    Dept \== research,
+    Name \== 'Dana'.
+
+% CLUE 2: Alex does not work in development and does not prefer C++.
+clue(2, Solution) :-
+    memberchk(p('Alex', Dept, Lang, _), Solution),
+    Dept \== development,
+    Lang \== 'c++'.
+
+% CLUE 3: The friend working in the testing department likes Python.
+clue(3, Solution) :-
+    memberchk(p(_, testing, Lang, _), Solution),
+    Lang == python.
+
+% CLUE 4: Ben prefers web projects and does not work in testing.
+clue(4, Solution) :-
+    memberchk(p('Ben', Dept, _, Project), Solution),
+    Project == web,
+    Dept \== testing.
+
+% CLUE 5: The friend whose favorite language is Java works in the design
+% department.
+clue(5, Solution) :-
+    memberchk(p(_, Dept, java, _), Solution),
+    Dept == design.
+
+% CLUE 6: Carla's project preference is not embedded, and her department
+% is not development.
+clue(6, Solution) :-
+    memberchk(p('Carla', Dept, _, Project), Solution),
+    Project \== embedded,
+    Dept \== development.
+
+% CLUE 7: Dana's favorite language is not Java, and she works in research
+% or testing.
+clue(7, Solution) :-
+    memberchk(p('Dana', Dept, Lang, _), Solution),
+    Lang \== java,
+    memberchk(Dept, [research, testing]).
+
+% CLUE 8: The friend who prefers data projects works in research and does
+% not use JavaScript.
+clue(8, Solution) :-
+    memberchk(p(_, Dept, Lang, data), Solution),
+    Dept == research,
+    Lang \== javascript.
