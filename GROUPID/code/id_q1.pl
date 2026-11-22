@@ -124,3 +124,15 @@ print_friend(p(Name, Dept, Lang, Project)) :-
 main :-
     once(solve(Solution)),
     forall(member(Friend, Solution), print_friend(Friend)).
+
+%% count_solutions(+Active, -N)
+%  Declarative reading: N is the number of candidates that satisfy every
+%  clue listed in Active; clues not in Active are ignored (they may be true
+%  or false).
+%  Modes / determinism: det. findall/3 collects every satisfying candidate
+%  and length/2 counts them; with Active = [] all 13,824 candidates count.
+count_solutions(Active, N) :-
+    findall(Solution,
+            ( candidate(Solution), satisfies(Active, Solution) ),
+            Solutions),
+    length(Solutions, N).
