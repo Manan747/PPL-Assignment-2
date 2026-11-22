@@ -40,3 +40,50 @@ expr(Numbers, t(Op, L, R), Value) :-
     expr(LeftNums, L, LV),
     expr(RightNums, R, RV),
     apply_op(Op, LV, RV, Value).
+
+%% precedence(+Tree, -P)
+%  Declarative reading: P is how tightly the top of Tree binds:
+%  + and - are 1, * and / are 2, and a single number is 3 (it is never
+%  wrapped in parentheses).
+precedence(n(_), 3).
+precedence(t(Op, _, _), P) :- op_precedence(Op, P).
+
+op_precedence(+, 1).
+op_precedence(-, 1).
+op_precedence(*, 2).
+op_precedence(/, 2).
+
+%% tree_string(+Tree, -String)
+%  Declarative reading: String is the canonical text of Tree, with no spaces:
+%  - a number is written in decimal;
+%  - a left operand is parenthesized only if its precedence is LOWER than
+%    its parent's (operators are left-associative, so 1-2-3 means (1-2)-3);
+%  - a right operand is parenthesized if its precedence is the SAME OR
+%    LOWER than its parent's (so 1-(2-3) and 1+(2+3) keep their brackets).
+%  This gives every different tree a different string.
+%  Modes / determinism: det. The string is only built, never parsed.
+tree_string(n(N), String) :-
+    number_string(N, String).
+tree_string(t(Op, L, R), String) :-
+    op_precedence(Op, P),
+    operand_string(left,  L, P, LS),
+    operand_string(right, R, P, RS),
+    format(string(String), "~w~w~w", [LS, Op, RS]).
+
+%% operand_string(+Side, +Tree, +ParentPrec, -String)
+%  Declarative reading: String is Tree's text, wrapped in parentheses when
+%  the rule for its Side (left or right) requires it under a parent of
+%  precedence ParentPrec.
+operand_string(Side, Tree, ParentPrec, String) :-
+    tree_string(Tree, Inner),
+    precedence(Tree, P),
+    (   needs_parens(Side, P, ParentPrec)
+    ->  format(string(String), "(~w)", [Inner])
+    ;   String = Inner
+    ).
+
+%% needs_parens(+Side, +ChildPrec, +ParentPrec)
+%  Declarative reading: an operand of precedence ChildPrec on this Side of a
+%  parent of precedence ParentPrec must be written in parentheses.
+needs_parens(left,  Child, Parent) :- Child <  Parent.
+needs_parens(right, Child, Parent) :- Child =< Parent.
